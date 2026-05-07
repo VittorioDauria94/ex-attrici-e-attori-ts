@@ -1,60 +1,67 @@
-import './style.css'
-import typescriptLogo from './assets/typescript.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import { setupCounter } from './counter.ts'
+import type { Actress } from "./types";
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-<section id="center">
-  <div class="hero">
-    <img src="${heroImg}" class="base" width="170" height="179">
-    <img src="${typescriptLogo}" class="framework" alt="TypeScript logo"/>
-    <img src="${viteLogo}" class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/main.ts</code> and save to test <code>HMR</code></p>
-  </div>
-  <button id="counter" type="button" class="counter"></button>
-</section>
+const validNationalities = [
+  "American",
+  "British",
+  "Australian",
+  "Israeli-American",
+  "South African",
+  "French",
+  "Indian",
+  "Israeli",
+  "Spanish",
+  "South Korean",
+  "Chinese",
+];
 
-<div class="ticks"></div>
+function isActress(data: unknown): data is Actress {
+  if (
+    data &&
+    typeof data === "object" &&
+    "id" in data &&
+    typeof data.id === "number" &&
+    "name" in data &&
+    typeof data.name === "string" &&
+    "birth_year" in data &&
+    typeof data.birth_year === "number" &&
+    (!("death_year" in data) || typeof data.death_year === "number") &&
+    "biography" in data &&
+    typeof data.biography === "string" &&
+    "image" in data &&
+    typeof data.image === "string" &&
+    "most_famous_movies" in data &&
+    Array.isArray(data.most_famous_movies) &&
+    data.most_famous_movies.length === 3 &&
+    data.most_famous_movies.every((movie) => typeof movie === "string") &&
+    "awards" in data &&
+    typeof data.awards === "string" &&
+    "nationality" in data &&
+    typeof data.nationality === "string" &&
+    validNationalities.includes(data.nationality)
+  ) {
+    return true;
+  }
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#documentation-icon"></use></svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank">
-          <img class="logo" src="${viteLogo}" alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://www.typescriptlang.org" target="_blank">
-          <img class="button-icon" src="${typescriptLogo}" alt="">
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#social-icon"></use></svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li><a href="https://github.com/vitejs/vite" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>GitHub</a></li>
-      <li><a href="https://chat.vite.dev/" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>Discord</a></li>
-      <li><a href="https://x.com/vite_js" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#x-icon"></use></svg>X.com</a></li>
-      <li><a href="https://bsky.app/profile/vite.dev" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#bluesky-icon"></use></svg>Bluesky</a></li>
-    </ul>
-  </div>
-</section>
+  return false;
+}
 
-<div class="ticks"></div>
-<section id="spacer"></section>
-`
+async function getActress(id: number): Promise<Actress | null> {
+  try {
+    const resp = await fetch(`http://localhost:3333/actresses/${id}`);
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+    if (!resp.ok) {
+      throw new Error("Errore nella risposta del server");
+    }
+
+    const data = await resp.json();
+
+    if (!isActress(data)) {
+      throw new Error("Formato dati non valido");
+    }
+
+    return data;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
